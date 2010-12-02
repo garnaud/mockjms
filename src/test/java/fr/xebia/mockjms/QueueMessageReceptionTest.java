@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.not;
 
 import static org.junit.Assert.assertThat;
 
-public class QueueMessageReception {
+public class QueueMessageReceptionTest {
 
 	private static final String QUEUE_NAME = "queue";
 
@@ -43,7 +43,7 @@ public class QueueMessageReception {
 		session.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
-		new QueueMessageReception().receiveMessage(session);
+		new QueueMessageReceptionTest().receiveMessage(session);
 
 		assertThat(session, hasReceivedMessageOnQueue(QUEUE_NAME));
 	}
@@ -53,7 +53,7 @@ public class QueueMessageReception {
 		MockSession session = new MockSession();
 
 		// The method to test
-		new QueueMessageReception().receiveMessage(session);
+		new QueueMessageReceptionTest().receiveMessage(session);
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class QueueMessageReception {
 		session.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
-		new QueueMessageReception().receiveMessageBefore5s(session);
+		new QueueMessageReceptionTest().receiveMessageBefore5s(session);
 
 		assertThat(session, hasReceivedMessageOnQueue(QUEUE_NAME));
 	}
@@ -78,7 +78,7 @@ public class QueueMessageReception {
 		session.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
-		new QueueMessageReception().receiveMessageBefore5s(session);
+		new QueueMessageReceptionTest().receiveMessageBefore5s(session);
 	}
 
 	@Test
@@ -89,7 +89,7 @@ public class QueueMessageReception {
 		session.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
-		new QueueMessageReception().receiveMessageNoWait(session);
+		new QueueMessageReceptionTest().receiveMessageNoWait(session);
 
 		assertThat(session, hasReceivedMessageOnQueue(QUEUE_NAME));
 	}
@@ -100,7 +100,7 @@ public class QueueMessageReception {
 		MockSession session = new MockSession();
 
 		// The method to test
-		new QueueMessageReception().receiveMessageNoWait(session);
+		new QueueMessageReceptionTest().receiveMessageNoWait(session);
 		assertThat(session, not(hasReceivedMessageOnQueue(QUEUE_NAME)));
 	}
 }

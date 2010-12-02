@@ -9,7 +9,7 @@ import javax.jms.Message;
 
 import org.junit.Test;
 
-public class AcknowledgeAMessage {
+public class AcknowledgeAMessageTest {
 
 	/**
 	 * Simulate method on message reception.
@@ -27,14 +27,14 @@ public class AcknowledgeAMessage {
 	@Test
 	public void check_that_message_is_acknowledeged() throws JMSException {
 		MockMessage message = new MessageBuilder().buildTextMessage();
-		new AcknowledgeAMessage().onMessage(message, true);
+		new AcknowledgeAMessageTest().onMessage(message, true);
 		assertThat(message, isAcknowledged());
 	}
 
 	@Test
 	public void check_that_message_is_not_acknowledeged() throws JMSException {
 		MockMessage message = new MessageBuilder().buildTextMessage();
-		new AcknowledgeAMessage().onMessage(message, false);
+		new AcknowledgeAMessageTest().onMessage(message, false);
 		assertThat(message, not(isAcknowledged()));
 	}
 
