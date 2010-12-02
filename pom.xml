@@ -20,6 +20,14 @@
 					<formats>
 						<format>xml</format>
 					</formats>
+					<instrumentation>
+						<ignores>
+							<ignore>fr.xebia.mockjms.*Builder</ignore>
+						</ignores>
+						<excludes>
+							<exclude>fr/xebia/mockjms/*Builder.class</exclude>
+						</excludes>
+					</instrumentation>
 				</configuration>
 			</plugin>
 			<plugin>
