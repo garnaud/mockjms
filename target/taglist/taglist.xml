@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <report xmlns="org.codehaus.mojo.taglist-maven-plugin">
   <tags>
-    <tag name="@todo" count="0" />
-    <tag name="TODO" count="105">
+    <tag name="Todo Work" count="107">
       <files>
         <file name="fr.xebia.mockjms.MockBytesMessage" count="27">
           <comments>
@@ -421,6 +420,18 @@
             <comment>
               <lineNumber>218</lineNumber>
               <comment>Auto-generated method stub</comment>
+            </comment>
+          </comments>
+        </file>
+        <file name="fr.xebia.mockjms.QueueMessageReceptionTest" count="2">
+          <comments>
+            <comment>
+              <lineNumber>132</lineNumber>
+              <comment>_TEST</comment>
+            </comment>
+            <comment>
+              <lineNumber>137</lineNumber>
+              <comment>_TEST</comment>
             </comment>
           </comments>
         </file>
