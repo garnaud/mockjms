@@ -1,6 +1,7 @@
 package fr.xebia.mockjms;
 
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -22,6 +23,14 @@ public class QueueMessageReceptionTest {
 		Queue createQueue = session.createQueue(QUEUE_NAME);
 		MessageConsumer consumer = session.createConsumer(createQueue);
 		consumer.receive();
+	}
+
+	public void receiveMessageOnLoop(Session session, Integer numberOfMessage) throws JMSException {
+		Queue createQueue = session.createQueue(QUEUE_NAME);
+		MessageConsumer consumer = session.createConsumer(createQueue);
+		for(Integer i=0;i<numberOfMessage;i++){
+			consumer.receive();
+		}
 	}
 
 	public void receiveMessageBefore5s(Session session) throws JMSException {
@@ -102,5 +111,29 @@ public class QueueMessageReceptionTest {
 		// The method to test
 		new QueueMessageReceptionTest().receiveMessageNoWait(session);
 		assertThat(session, not(hasReceivedMessageOnQueue(QUEUE_NAME)));
+	}
+	
+	@Test
+	public void should_receive_two_messages() throws JMSException{
+		MockSession session = new MockSession();
+		
+		MockTextMessage message1 = new MessageBuilder().buildTextMessage();
+		MockTextMessage message2 = new MessageBuilder().buildTextMessage();
+		session.storeMessagesOnQueue(QUEUE_NAME, message1);
+		session.storeMessagesOnQueue(QUEUE_NAME, message2);
+		
+		new QueueMessageReceptionTest().receiveMessageOnLoop(session,2);
+		
+		assertThat(session,hasReceivedMessageOnQueue(QUEUE_NAME,2));
+	}
+	
+	@Test
+	public void should_receive_two_messages_before_5s(){
+		// TODO_TEST
+	}
+	
+	@Test
+	public void should_receive_two_messages_without_waiting() {
+		// TODO_TEST
 	}
 }

@@ -93,7 +93,7 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	}
 
-	public int geNumberMessageOfMessagesReceived() {
+	public int geNumberOfMessagesReceived() {
 		return messageReceived.get();
 	}
 

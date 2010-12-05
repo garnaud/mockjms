@@ -219,16 +219,24 @@ public class MockSession implements Session {
 
 	}
 
-	ConcurrentHashMap<String, MockMessage> storeQueueMessages = new ConcurrentHashMap<String, MockMessage>();
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeQueueMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
 	public void storeMessagesOnQueue(String queueName, MockMessage message) {
-		storeQueueMessages.put(queueName, message);
+		if(!storeQueueMessages.containsKey(queueName)){
+			storeQueueMessages.put(queueName, new ConcurrentLinkedQueue<MockMessage>());
+		}
+		if(!storeQueueMessages.get(queueName).add(message)){
+			throw new RuntimeException();
+		}
 	}
 
 	public MockMessage popQueueStoreMessage(Queue queue) {
 		MockMessage mockMessage = null;
 		try {
-			mockMessage = storeQueueMessages.get(queue.getQueueName());
+			if(storeQueueMessages.containsKey(queue.getQueueName())){
+				// Remove the message from the queue.
+				mockMessage = storeQueueMessages.get(queue.getQueueName()).poll();
+			}
 		} catch (JMSException e) {
 			throw new JMSRuntimeException(e);
 		}
