@@ -186,7 +186,7 @@ public class MessageBuilder {
 	 * 
 	 * @param delayedTime
 	 *            delayed time in ms.
-	 * @return
+	 * @return this
 	 */
 	public MessageBuilder setDelayedTimeInMs(long delayedTime) {
 		this.delayedTime = delayedTime;
