@@ -1,6 +1,6 @@
 package fr.xebia.mockjms;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -16,7 +16,7 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	private final MockSession session;
 	private final Destination destination;
-	private final AtomicInteger messageReceived = new AtomicInteger(0);
+	private final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
 
 	public MockMessageConsumer(MockSession session, Destination destination) {
 		super();
@@ -45,17 +45,17 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	@Override
 	public Message receive() throws JMSException {
-		Message result = null;
+		MockMessage message = null;
 		if (destination instanceof Queue) {
 			Queue queue = (Queue) destination;
-			result = session.popQueueStoreMessage(queue);
-			if (result != null) {
-				messageReceived.incrementAndGet();
+			message = session.popQueueStoreMessage(queue);
+			if (message != null) {
+				messagesReceived.add(message);
 			} else {
 				throw new BlockingQueueException(queue.getQueueName());
 			}
 		}
-		return result;
+		return message;
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class MockMessageConsumer implements MessageConsumer {
 		if (destination instanceof Queue) {
 			message = session.popQueueStoreMessage((Queue) destination);
 			if ((message != null) && (timeout > message.getDelayedTime())) {
-				messageReceived.incrementAndGet();
+				messagesReceived.add(message);
 			} else {
 				throw new JMSException(
 						"No message has been received during the last "
@@ -76,15 +76,15 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	@Override
 	public Message receiveNoWait() throws JMSException {
-		Message result = null;
+		MockMessage message = null;
 		if (destination instanceof Queue) {
 			Queue queue = (Queue) destination;
-			result = session.popQueueStoreMessage(queue);
-			if (result != null) {
-				messageReceived.incrementAndGet();
+			message = session.popQueueStoreMessage(queue);
+			if (message != null) {
+				messagesReceived.add(message);
 			}
 		}
-		return result;
+		return message;
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class MockMessageConsumer implements MessageConsumer {
 	}
 
 	public int geNumberOfMessagesReceived() {
-		return messageReceived.get();
+		return messagesReceived.size();
 	}
 
 	public boolean isQueue(String queueName) {
@@ -106,6 +106,11 @@ public class MockMessageConsumer implements MessageConsumer {
 			throw new JMSRuntimeException(e);
 		}
 		return result;
+	}
+
+	public ConcurrentLinkedQueue<MockMessage> getMessagesReceived() {
+		return messagesReceived;
+
 	}
 
 }

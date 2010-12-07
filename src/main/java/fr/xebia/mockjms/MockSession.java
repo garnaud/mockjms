@@ -131,11 +131,15 @@ public class MockSession implements Session {
 
 	}
 
+	ConcurrentLinkedQueue<MockMessageProducer> messageProducers = new ConcurrentLinkedQueue<MockMessageProducer>();
+
 	@Override
 	public MessageProducer createProducer(Destination destination)
 			throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		MockMessageProducer messageProducer = new MockMessageProducer(this,
+				destination);
+		messageProducers.add(messageProducer);
+		return messageProducer;
 	}
 
 	ConcurrentLinkedQueue<MockMessageConsumer> messageConsumers = new ConcurrentLinkedQueue<MockMessageConsumer>();
@@ -222,10 +226,11 @@ public class MockSession implements Session {
 	ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeQueueMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
 	public void storeMessagesOnQueue(String queueName, MockMessage message) {
-		if(!storeQueueMessages.containsKey(queueName)){
-			storeQueueMessages.put(queueName, new ConcurrentLinkedQueue<MockMessage>());
+		if (!storeQueueMessages.containsKey(queueName)) {
+			storeQueueMessages.put(queueName,
+					new ConcurrentLinkedQueue<MockMessage>());
 		}
-		if(!storeQueueMessages.get(queueName).add(message)){
+		if (!storeQueueMessages.get(queueName).add(message)) {
 			throw new RuntimeException();
 		}
 	}
@@ -233,9 +238,10 @@ public class MockSession implements Session {
 	public MockMessage popQueueStoreMessage(Queue queue) {
 		MockMessage mockMessage = null;
 		try {
-			if(storeQueueMessages.containsKey(queue.getQueueName())){
+			if (storeQueueMessages.containsKey(queue.getQueueName())) {
 				// Remove the message from the queue.
-				mockMessage = storeQueueMessages.get(queue.getQueueName()).poll();
+				mockMessage = storeQueueMessages.get(queue.getQueueName())
+						.poll();
 			}
 		} catch (JMSException e) {
 			throw new JMSRuntimeException(e);
@@ -252,6 +258,17 @@ public class MockSession implements Session {
 			}
 		}
 		return result;
+	}
+
+	public MockMessageProducer getQueueProducer(String queueName) {
+		MockMessageProducer mockMessageProducer = null;
+		for (MockMessageProducer messageProducer : messageProducers) {
+			if (messageProducer.isQueue(queueName)) {
+				mockMessageProducer = messageProducer;
+				break;
+			}
+		}
+		return mockMessageProducer;
 	}
 
 }

@@ -21,6 +21,10 @@ public class MockMessage implements Message {
 	 */
 	private long delayedTime = 0L;
 
+	private Destination jmsReplyTo;
+
+	private String correlationID;
+
 	@Override
 	public String getJMSMessageID() throws JMSException {
 		// TODO Auto-generated method stub
@@ -60,25 +64,22 @@ public class MockMessage implements Message {
 
 	@Override
 	public void setJMSCorrelationID(String correlationID) throws JMSException {
-		// TODO Auto-generated method stub
-
+		this.correlationID = correlationID;
 	}
 
 	@Override
 	public String getJMSCorrelationID() throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		return correlationID;
 	}
 
 	@Override
 	public Destination getJMSReplyTo() throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		return jmsReplyTo;
 	}
 
 	@Override
 	public void setJMSReplyTo(Destination replyTo) throws JMSException {
-		// TODO Auto-generated method stub
+		jmsReplyTo = replyTo;
 
 	}
 
@@ -220,7 +221,6 @@ public class MockMessage implements Message {
 		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public Enumeration getPropertyNames() throws JMSException {
 		// TODO Auto-generated method stub

@@ -1,21 +1,36 @@
 package fr.xebia.mockjms.asserts;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import javax.jms.JMSException;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
+import fr.xebia.mockjms.MockMessage;
 import fr.xebia.mockjms.MockMessageConsumer;
 import fr.xebia.mockjms.MockSession;
 
 public class HasReceivedMessageOnQueue extends TypeSafeMatcher<MockSession> {
 
+	private final String queueName;
+	private final Integer expectedMessageReceived;
+	private final MessageProperties messageProperties;
 
-	private String queueName = null;
-	private Integer expectedMessageReceived=1;
+	public HasReceivedMessageOnQueue(String queueName,
+			MessageProperties messageProperties) {
+		super();
+		this.queueName = queueName;
+		expectedMessageReceived = 1;
+		this.messageProperties = messageProperties;
+	}
 
 	public HasReceivedMessageOnQueue(String queueName) {
 		super();
 		this.queueName = queueName;
+		expectedMessageReceived = 1;
+		messageProperties = null;
 	}
 
 	public HasReceivedMessageOnQueue(String queueName,
@@ -23,6 +38,7 @@ public class HasReceivedMessageOnQueue extends TypeSafeMatcher<MockSession> {
 		super();
 		this.queueName = queueName;
 		this.expectedMessageReceived = expectedMessageReceived;
+		messageProperties = null;
 	}
 
 	@Override
@@ -32,11 +48,26 @@ public class HasReceivedMessageOnQueue extends TypeSafeMatcher<MockSession> {
 
 	@Override
 	protected boolean matchesSafely(MockSession session) {
-		MockMessageConsumer messageConsumer = null;
-		messageConsumer = session.getQueueConsumer(queueName);
-		int messageReceived = messageConsumer
-				.geNumberOfMessagesReceived();
-		return ((messageConsumer != null) && (messageReceived == expectedMessageReceived));
+		Boolean result = Boolean.FALSE;
+		MockMessageConsumer messageConsumer = session
+				.getQueueConsumer(queueName);
+		int messageReceived = messageConsumer.geNumberOfMessagesReceived();
+		result = (messageConsumer != null)
+				&& (messageReceived == expectedMessageReceived);
+		if (result && (messageProperties != null)) {
+			ConcurrentLinkedQueue<MockMessage> messagesReceived = messageConsumer
+					.getMessagesReceived();
+			for (MockMessage message : messagesReceived) {
+				try {
+					result &= (messageProperties.getCorrelationID() != null)
+							&& messageProperties.getCorrelationID().equals(
+									message.getJMSCorrelationID());
+				} catch (JMSException e) {
+					result = false;
+				}
+			}
+		}
+		return result;
 	}
 
 	public static <T> Matcher<MockSession> hasReceivedMessageOnQueue(
@@ -46,6 +77,11 @@ public class HasReceivedMessageOnQueue extends TypeSafeMatcher<MockSession> {
 
 	public static <T> Matcher<MockSession> hasReceivedMessageOnQueue(
 			String queueName, Integer expectedMessageReceived) {
-		return new HasReceivedMessageOnQueue(queueName,expectedMessageReceived);
+		return new HasReceivedMessageOnQueue(queueName, expectedMessageReceived);
+	}
+
+	public static <T> Matcher<MockSession> hasReceivedMessageOnQueue(
+			String queueName, MessageProperties messageProperties) {
+		return new HasReceivedMessageOnQueue(queueName, messageProperties);
 	}
 }
