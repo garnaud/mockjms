@@ -7,6 +7,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
+import javax.jms.Topic;
 
 import fr.xebia.mockjms.exceptions.JMSRuntimeException;
 
@@ -144,6 +145,17 @@ public class MockMessageProducer implements MessageProducer {
 
 	public ConcurrentLinkedQueue<MockMessage> getMessagesToSend() {
 		return messagesToSend;
+	}
+
+	public boolean isTopic(String topicName) {
+		boolean result = false;
+		try {
+			result = (destination instanceof Topic)
+					&& topicName.equals(((Topic) destination).getTopicName());
+		} catch (JMSException e) {
+			throw new JMSRuntimeException(e);
+		}
+		return result;
 	}
 
 }

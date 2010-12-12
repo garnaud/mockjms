@@ -8,6 +8,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Queue;
+import javax.jms.Topic;
 
 import fr.xebia.mockjms.exceptions.BlockingQueueException;
 import fr.xebia.mockjms.exceptions.JMSRuntimeException;
@@ -53,6 +54,14 @@ public class MockMessageConsumer implements MessageConsumer {
 				messagesReceived.add(message);
 			} else {
 				throw new BlockingQueueException(queue.getQueueName());
+			}
+		} else if (destination instanceof Topic) {
+			Topic queue = (Topic) destination;
+			message = session.popTopicStoreMessage(queue);
+			if (message != null) {
+				messagesReceived.add(message);
+			} else {
+				throw new BlockingQueueException(queue.getTopicName());
 			}
 		}
 		return message;
@@ -111,6 +120,17 @@ public class MockMessageConsumer implements MessageConsumer {
 	public ConcurrentLinkedQueue<MockMessage> getMessagesReceived() {
 		return messagesReceived;
 
+	}
+
+	public boolean isTopic(String topicName) {
+		boolean result = false;
+		try {
+			result = (destination instanceof Topic)
+					&& topicName.equals(((Topic) destination).getTopicName());
+		} catch (JMSException e) {
+			throw new JMSRuntimeException(e);
+		}
+		return result;
 	}
 
 }

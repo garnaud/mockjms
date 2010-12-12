@@ -174,8 +174,7 @@ public class MockSession implements Session {
 
 	@Override
 	public Topic createTopic(String topicName) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		return new MockTopic(topicName);
 	}
 
 	@Override
@@ -269,6 +268,55 @@ public class MockSession implements Session {
 			}
 		}
 		return mockMessageProducer;
+	}
+
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeTopicMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
+
+	public void storeMessagesOnTopic(String topicName, MockMessage message) {
+		if (!storeTopicMessages.containsKey(topicName)) {
+			storeTopicMessages.put(topicName,
+					new ConcurrentLinkedQueue<MockMessage>());
+		}
+		if (!storeTopicMessages.get(topicName).add(message)) {
+			throw new RuntimeException();
+		}
+	}
+
+	public MockMessage popTopicStoreMessage(Topic topic) {
+		MockMessage mockMessage = null;
+		try {
+			if (storeTopicMessages.containsKey(topic.getTopicName())) {
+				// Remove the message from the topic.
+				// TODO don't remove message if durable subscriber
+				mockMessage = storeTopicMessages.get(topic.getTopicName())
+						.poll();
+			}
+		} catch (JMSException e) {
+			throw new JMSRuntimeException(e);
+		}
+		return mockMessage;
+	}
+
+	public MockMessageProducer getTopicProducer(String topicName) {
+		MockMessageProducer mockMessageProducer = null;
+		for (MockMessageProducer messageProducer : messageProducers) {
+			if (messageProducer.isTopic(topicName)) {
+				mockMessageProducer = messageProducer;
+				break;
+			}
+		}
+		return mockMessageProducer;
+	}
+
+	public MockMessageConsumer getTopicConsumer(String topicName) {
+		MockMessageConsumer result = null;
+		for (MockMessageConsumer messageConsumer : messageConsumers) {
+			if (messageConsumer.isTopic(topicName)) {
+				result = messageConsumer;
+				break;
+			}
+		}
+		return result;
 	}
 
 }
