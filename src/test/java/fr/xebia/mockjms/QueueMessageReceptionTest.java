@@ -1,5 +1,9 @@
 package fr.xebia.mockjms;
 
+import static fr.xebia.mockjms.asserts.HasReceivedMessageOnQueue.hasReceivedMessageOnQueue;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
+
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
@@ -8,26 +12,20 @@ import javax.jms.Session;
 import org.junit.Test;
 
 import fr.xebia.mockjms.exceptions.BlockingQueueException;
-import static fr.xebia.mockjms.asserts.HasReceivedMessageOnQueue.hasReceivedMessageOnQueue;
-
-import static org.hamcrest.Matchers.not;
-
-import static org.junit.Assert.assertThat;
 
 public class QueueMessageReceptionTest {
 
 	private static final String QUEUE_NAME = "queue";
 
 	public void receiveMessage(Session session) throws JMSException {
-		Queue createQueue = session.createQueue(QUEUE_NAME);
-		MessageConsumer consumer = session.createConsumer(createQueue);
-		consumer.receive();
+		receiveMessageOnLoop(session, 1);
 	}
 
-	public void receiveMessageOnLoop(Session session, Integer numberOfMessage) throws JMSException {
+	public void receiveMessageOnLoop(Session session, Integer numberOfMessage)
+			throws JMSException {
 		Queue createQueue = session.createQueue(QUEUE_NAME);
 		MessageConsumer consumer = session.createConsumer(createQueue);
-		for(Integer i=0;i<numberOfMessage;i++){
+		for (Integer i = 0; i < numberOfMessage; i++) {
 			consumer.receive();
 		}
 	}
@@ -111,26 +109,26 @@ public class QueueMessageReceptionTest {
 		new QueueMessageReceptionTest().receiveMessageNoWait(session);
 		assertThat(session, not(hasReceivedMessageOnQueue(QUEUE_NAME)));
 	}
-	
+
 	@Test
-	public void should_receive_two_messages() throws JMSException{
+	public void should_receive_two_messages() throws JMSException {
 		MockSession session = new MockSession();
-		
+
 		MockTextMessage message1 = new MessageBuilder().buildTextMessage();
 		MockTextMessage message2 = new MessageBuilder().buildTextMessage();
 		session.storeMessagesOnQueue(QUEUE_NAME, message1);
 		session.storeMessagesOnQueue(QUEUE_NAME, message2);
-		
-		new QueueMessageReceptionTest().receiveMessageOnLoop(session,2);
-		
-		assertThat(session,hasReceivedMessageOnQueue(QUEUE_NAME,2));
+
+		new QueueMessageReceptionTest().receiveMessageOnLoop(session, 2);
+
+		assertThat(session, hasReceivedMessageOnQueue(QUEUE_NAME, 2));
 	}
-	
+
 	@Test
-	public void should_receive_two_messages_before_5s(){
+	public void should_receive_two_messages_before_5s() {
 		// TODO_TEST
 	}
-	
+
 	@Test
 	public void should_receive_two_messages_without_waiting() {
 		// TODO_TEST

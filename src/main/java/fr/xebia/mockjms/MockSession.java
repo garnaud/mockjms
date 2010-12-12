@@ -144,6 +144,8 @@ public class MockSession implements Session {
 
 	ConcurrentLinkedQueue<MockMessageConsumer> messageConsumers = new ConcurrentLinkedQueue<MockMessageConsumer>();
 
+	private final MockConnection connection = new MockConnection();
+
 	@Override
 	public MessageConsumer createConsumer(Destination destination)
 			throws JMSException {
@@ -178,10 +180,11 @@ public class MockSession implements Session {
 	}
 
 	@Override
-	public TopicSubscriber createDurableSubscriber(Topic topic, String name)
+	public TopicSubscriber createDurableSubscriber(Topic topic, String clientID)
 			throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		TopicSubscriber topicSubscriber = connection.addDurableConnection(
+				topic, clientID);
+		return topicSubscriber;
 	}
 
 	@Override
@@ -222,7 +225,7 @@ public class MockSession implements Session {
 
 	}
 
-	ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeQueueMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
+	private final ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeQueueMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
 	public void storeMessagesOnQueue(String queueName, MockMessage message) {
 		if (!storeQueueMessages.containsKey(queueName)) {
@@ -270,7 +273,7 @@ public class MockSession implements Session {
 		return mockMessageProducer;
 	}
 
-	ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeTopicMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
+	private final ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeTopicMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
 	public void storeMessagesOnTopic(String topicName, MockMessage message) {
 		if (!storeTopicMessages.containsKey(topicName)) {

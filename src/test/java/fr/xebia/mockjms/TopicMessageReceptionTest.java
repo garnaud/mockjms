@@ -1,23 +1,32 @@
 package fr.xebia.mockjms;
 
 import static fr.xebia.mockjms.asserts.HasReceivedMessageOnTopic.hasReceivedMessageOnTopic;
+import static org.junit.Assert.assertThat;
 
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class TopicMessageReceptionTest {
 
 	private static final String TOPIC_NAME = "aTopic";
+	private static final String CLIENT_ID = "aClientId";
 
 	private void receiveMessageOnTopic(Session session) throws JMSException {
+		receiveMessageOnTopic(session, 1);
+	}
+
+	private void receiveMessageOnTopic(Session session, Integer numberOfMessage)
+			throws JMSException {
 		Topic topic = session.createTopic(TOPIC_NAME);
 		MessageConsumer consumer = session.createConsumer(topic);
-		consumer.receive();
+		for (Integer i = 0; i < numberOfMessage; i++) {
+			consumer.receive();
+		}
 	}
 
 	@Test
@@ -29,12 +38,21 @@ public class TopicMessageReceptionTest {
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session);
 
-		Assert.assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME));
+		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME));
 	}
 
 	@Test
-	public void should_receive_2_messages_in_topic() {
-		// TODO_TEST
+	public void should_receive_2_messages_in_topic() throws JMSException {
+		MockSession session = new MockSession();
+
+		session.storeMessagesOnTopic(TOPIC_NAME,
+				new MessageBuilder().buildTextMessage());
+		session.storeMessagesOnTopic(TOPIC_NAME,
+				new MessageBuilder().buildTextMessage());
+
+		new TopicMessageReceptionTest().receiveMessageOnTopic(session, 2);
+
+		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 2));
 	}
 
 	@Test
@@ -44,6 +62,25 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_no_receiving_message_because_timeout_5s() {
-		// TODO_TEST
+		// TODO_TEST see QueueMessageReceptionTest
+	}
+
+	@Test
+	public void should_receiving_message_in_durable_subscriber()
+			throws JMSException {
+		MockSession session = new MockSession();
+		session.storeMessagesOnTopic(TOPIC_NAME,
+				new MessageBuilder().buildTextMessage());
+
+		new TopicMessageReceptionTest()
+				.receiveMessageOnTopicInDurableSubscriber(session);
+		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME));
+	}
+
+	private void receiveMessageOnTopicInDurableSubscriber(Session session)
+			throws JMSException {
+		TopicSubscriber durableSubscriber = session.createDurableSubscriber(
+				new MockTopic(TOPIC_NAME), CLIENT_ID);
+		durableSubscriber.receive();
 	}
 }
