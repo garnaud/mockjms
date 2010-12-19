@@ -49,14 +49,13 @@ public class HasReceivedMessageOnTopic extends TypeSafeMatcher<MockSession> {
 	@Override
 	protected boolean matchesSafely(MockSession session) {
 		Boolean result = Boolean.FALSE;
-		MockMessageConsumer messageConsumer = session
-				.getTopicConsumer(topicName);
-		int messageReceived = messageConsumer.geNumberOfMessagesReceived();
-		result = (messageConsumer != null)
-				&& (messageReceived == expectedMessageReceived);
+
+		ConcurrentLinkedQueue<MockMessage> messagesReceived = getMessagesFromAllConsumers(session);
+
+		int messageReceived = messagesReceived.size();
+
+		result = (messageReceived == expectedMessageReceived);
 		if (result && (messageProperties != null)) {
-			ConcurrentLinkedQueue<MockMessage> messagesReceived = messageConsumer
-					.getMessagesReceived();
 			for (MockMessage message : messagesReceived) {
 				try {
 					result &= (messageProperties.getCorrelationID() != null)
@@ -68,6 +67,18 @@ public class HasReceivedMessageOnTopic extends TypeSafeMatcher<MockSession> {
 			}
 		}
 		return result;
+	}
+
+	public ConcurrentLinkedQueue<MockMessage> getMessagesFromAllConsumers(
+			MockSession session) {
+		ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
+		for (MockMessageConsumer messageConsumer : session
+				.getTopicConsumers(topicName)) {
+			if (messageConsumer.getMessagesReceived() != null) {
+				messagesReceived.addAll(messageConsumer.getMessagesReceived());
+			}
+		}
+		return messagesReceived;
 	}
 
 	public static <T> Matcher<MockSession> hasReceivedMessageOnTopic(

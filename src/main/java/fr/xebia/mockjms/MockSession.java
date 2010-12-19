@@ -183,7 +183,7 @@ public class MockSession implements Session {
 	public TopicSubscriber createDurableSubscriber(Topic topic, String clientID)
 			throws JMSException {
 		TopicSubscriber topicSubscriber = connection.addDurableConnection(
-				topic, clientID);
+				new MockSession(), (MockTopic) topic, clientID);
 		return topicSubscriber;
 	}
 
@@ -275,11 +275,25 @@ public class MockSession implements Session {
 
 	private final ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeTopicMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
-	public void storeMessagesOnTopic(String topicName, MockMessage message) {
+	public void storeMessagesOnTopicNotDurable(String topicName,
+			MockMessage message) {
 		if (!storeTopicMessages.containsKey(topicName)) {
 			storeTopicMessages.put(topicName,
 					new ConcurrentLinkedQueue<MockMessage>());
 		}
+		message.keepItForNotDurableTopic();
+		if (!storeTopicMessages.get(topicName).add(message)) {
+			throw new RuntimeException();
+		}
+	}
+
+	public void storeMessagesOnTopicNotDurable(String topicName,
+			MockMessage message, int numberOfTopic) {
+		if (!storeTopicMessages.containsKey(topicName)) {
+			storeTopicMessages.put(topicName,
+					new ConcurrentLinkedQueue<MockMessage>());
+		}
+		message.keepItForNotDurableTopic(numberOfTopic);
 		if (!storeTopicMessages.get(topicName).add(message)) {
 			throw new RuntimeException();
 		}
@@ -290,9 +304,20 @@ public class MockSession implements Session {
 		try {
 			if (storeTopicMessages.containsKey(topic.getTopicName())) {
 				// Remove the message from the topic.
-				// TODO don't remove message if durable subscriber
-				mockMessage = storeTopicMessages.get(topic.getTopicName())
-						.poll();
+				for (MockMessage message : storeTopicMessages.get(topic
+						.getTopicName())) {
+					if (message.keptForNotDurableTopic) {
+						// The message is available for all subscribers, even if
+						// it subscribes after the message would be sent
+						mockMessage = message;
+						message.numberOfConsumers.decrementAndGet();
+						if (message.numberOfConsumers.intValue() == 0) {
+							storeTopicMessages.get(topic.getTopicName())
+									.remove(message);
+						}
+						break;
+					}
+				}
 			}
 		} catch (JMSException e) {
 			throw new JMSRuntimeException(e);
@@ -319,7 +344,22 @@ public class MockSession implements Session {
 				break;
 			}
 		}
+		if (result != null) {
+			return result;
+		}
 		return result;
+	}
+
+	public ConcurrentLinkedQueue<MockMessageConsumer> getTopicConsumers(
+			String topicName) {
+		ConcurrentLinkedQueue<MockMessageConsumer> messageConsumersForTopic = new ConcurrentLinkedQueue<MockMessageConsumer>();
+		for (MockMessageConsumer mockMessageConsumer : messageConsumers) {
+			if (mockMessageConsumer.isTopic(topicName)) {
+				messageConsumersForTopic.add(mockMessageConsumer);
+			}
+
+		}
+		return messageConsumers;
 	}
 
 }

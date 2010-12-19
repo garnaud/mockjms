@@ -1,19 +1,26 @@
 package fr.xebia.mockjms;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import fr.xebia.mockjms.exceptions.BlockingQueueException;
+
 public class MockTopicSubscriber implements TopicSubscriber {
 
 	private String clientID = null;
 	private Topic topic = null;
+	private final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
+	private final MockSession session;
 
-	public MockTopicSubscriber(Topic topic, String clientID) {
+	public MockTopicSubscriber(MockSession session, Topic topic, String clientID) {
 		this.clientID = clientID;
 		this.topic = topic;
+		this.session = session;
 	}
 
 	@Override
@@ -37,14 +44,28 @@ public class MockTopicSubscriber implements TopicSubscriber {
 
 	@Override
 	public Message receive() throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		MockMessage message = null;
+		Topic queue = getTopic();
+		message = session.popTopicStoreMessage(queue);
+		if (message != null) {
+			messagesReceived.add(message);
+		} else {
+			throw new BlockingQueueException(queue.getTopicName());
+		}
+		return message;
 	}
 
 	@Override
 	public Message receive(long timeout) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		MockMessage message = null;
+		Topic queue = getTopic();
+		message = session.popTopicStoreMessage(queue);
+		if (message != null) {
+			messagesReceived.add(message);
+		} else {
+			throw new BlockingQueueException(queue.getTopicName());
+		}
+		return message;
 	}
 
 	@Override
@@ -77,6 +98,18 @@ public class MockTopicSubscriber implements TopicSubscriber {
 
 	public String getClientID() {
 		return clientID;
+	}
+
+	public boolean isTopic(String topicName) {
+		return getTopicName().equals(topicName);
+	}
+
+	public int geNumberOfMessagesReceived() {
+		return messagesReceived.size();
+	}
+
+	public ConcurrentLinkedQueue<MockMessage> getMessagesReceived() {
+		return messagesReceived;
 	}
 
 }

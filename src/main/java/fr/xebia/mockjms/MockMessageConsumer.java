@@ -119,7 +119,6 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	public ConcurrentLinkedQueue<MockMessage> getMessagesReceived() {
 		return messagesReceived;
-
 	}
 
 	public boolean isTopic(String topicName) {

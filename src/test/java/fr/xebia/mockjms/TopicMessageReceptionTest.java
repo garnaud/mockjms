@@ -9,6 +9,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TopicMessageReceptionTest {
@@ -33,7 +34,7 @@ public class TopicMessageReceptionTest {
 	public void should_receive_1_message_in_topic() throws JMSException {
 		MockSession session = new MockSession();
 
-		session.storeMessagesOnTopic(TOPIC_NAME,
+		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session);
@@ -45,14 +46,32 @@ public class TopicMessageReceptionTest {
 	public void should_receive_2_messages_in_topic() throws JMSException {
 		MockSession session = new MockSession();
 
-		session.storeMessagesOnTopic(TOPIC_NAME,
+		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
-		session.storeMessagesOnTopic(TOPIC_NAME,
+		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session, 2);
 
 		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 2));
+	}
+
+	@Test
+	public void should_receive_1_message_in_2_consumers() throws JMSException {
+		MockSession session = new MockSession();
+		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
+				new MessageBuilder().buildTextMessage(), 2);
+		new TopicMessageReceptionTest().receiveMessageOn2Consumers(session);
+		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 2));
+	}
+
+	private void receiveMessageOn2Consumers(MockSession session)
+			throws JMSException {
+		Topic topic = session.createTopic(TOPIC_NAME);
+		MessageConsumer consumer1 = session.createConsumer(topic);
+		MessageConsumer consumer2 = session.createConsumer(topic);
+		consumer1.receive();
+		consumer2.receive();
 	}
 
 	@Test
@@ -66,10 +85,11 @@ public class TopicMessageReceptionTest {
 	}
 
 	@Test
+	@Ignore
 	public void should_receiving_message_in_durable_subscriber()
 			throws JMSException {
 		MockSession session = new MockSession();
-		session.storeMessagesOnTopic(TOPIC_NAME,
+		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest()

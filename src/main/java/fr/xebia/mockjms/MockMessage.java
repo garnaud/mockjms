@@ -1,6 +1,7 @@
 package fr.xebia.mockjms;
 
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -24,6 +25,10 @@ public class MockMessage implements Message {
 	private Destination jmsReplyTo;
 
 	private String correlationID;
+
+	protected boolean keptForNotDurableTopic;
+
+	protected AtomicInteger numberOfConsumers = new AtomicInteger(0);
 
 	@Override
 	public String getJMSMessageID() throws JMSException {
@@ -309,4 +314,13 @@ public class MockMessage implements Message {
 		this.delayedTime = delayedTime;
 	}
 
+	public void keepItForNotDurableTopic() {
+		keptForNotDurableTopic = true;
+		numberOfConsumers = new AtomicInteger(0);
+	}
+
+	public void keepItForNotDurableTopic(int numberOfConsumers) {
+		keptForNotDurableTopic = true;
+		this.numberOfConsumers = new AtomicInteger(numberOfConsumers);
+	}
 }

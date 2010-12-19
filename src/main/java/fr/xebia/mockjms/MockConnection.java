@@ -90,10 +90,15 @@ public class MockConnection implements Connection {
 		return null;
 	}
 
-	public TopicSubscriber addDurableConnection(Topic topic, String clientID) {
-		MockTopicSubscriber topicSubscriber = new MockTopicSubscriber(
+	public TopicSubscriber addDurableConnection(MockSession session,
+			MockTopic topic, String clientID) {
+		MockTopicSubscriber topicSubscriber = new MockTopicSubscriber(session,
 				topic, clientID);
 		topicSubscribers.add(topicSubscriber);
 		return topicSubscriber;
+	}
+
+	public Set<MockTopicSubscriber> getTopicSubscribers() {
+		return topicSubscribers;
 	}
 }
