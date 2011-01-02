@@ -145,8 +145,6 @@ public class MockSession implements Session {
 
 	ConcurrentLinkedQueue<MockMessageConsumer> messageConsumers = new ConcurrentLinkedQueue<MockMessageConsumer>();
 
-	private final MockConnection connection = new MockConnection();
-
 	@Override
 	public MessageConsumer createConsumer(Destination destination)
 			throws JMSException {

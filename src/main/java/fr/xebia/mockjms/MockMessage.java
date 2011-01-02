@@ -226,6 +226,7 @@ public class MockMessage implements Message {
 		return null;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Enumeration getPropertyNames() throws JMSException {
 		// TODO Auto-generated method stub

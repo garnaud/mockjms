@@ -50,11 +50,6 @@ public class MockMessageConsumer implements MessageConsumer {
 	}
 
 	// REFACTOR should use enum
-	private boolean isTopicConsumer() {
-		return destination instanceof Topic;
-	}
-
-	// REFACTOR should use enum
 	private boolean isDurableTopicConsumer() {
 		return this instanceof MockTopicDurableSubscriber;
 	}

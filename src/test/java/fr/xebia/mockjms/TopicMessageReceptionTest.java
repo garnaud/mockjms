@@ -14,7 +14,6 @@ import org.junit.Test;
 public class TopicMessageReceptionTest {
 
 	private static final String TOPIC_NAME = "aTopic";
-	private static final String CLIENT_ID = "aClientId";
 	private MockSession session;
 
 	@Before
