@@ -17,7 +17,7 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	private final MockSession session;
 	private final Destination destination;
-	private final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
+	public final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
 
 	public MockMessageConsumer(MockSession session, Destination destination) {
 		super();
@@ -44,10 +44,25 @@ public class MockMessageConsumer implements MessageConsumer {
 
 	}
 
+	// REFACTOR should use enum
+	private boolean isQueueConsumer() {
+		return destination instanceof Queue;
+	}
+
+	// REFACTOR should use enum
+	private boolean isTopicConsumer() {
+		return destination instanceof Topic;
+	}
+
+	// REFACTOR should use enum
+	private boolean isDurableTopicConsumer() {
+		return this instanceof MockTopicDurableSubscriber;
+	}
+
 	@Override
 	public Message receive() throws JMSException {
 		MockMessage message = null;
-		if (destination instanceof Queue) {
+		if (isQueueConsumer()) {
 			Queue queue = (Queue) destination;
 			message = session.popQueueStoreMessage(queue);
 			if (message != null) {
@@ -55,13 +70,11 @@ public class MockMessageConsumer implements MessageConsumer {
 			} else {
 				throw new BlockingQueueException(queue.getQueueName());
 			}
-		} else if (destination instanceof Topic) {
-			Topic queue = (Topic) destination;
-			message = session.popTopicStoreMessage(queue);
+		} else {
+			message = session.popTopicStoreMessage((Topic) destination,
+					isDurableTopicConsumer());
 			if (message != null) {
 				messagesReceived.add(message);
-			} else {
-				throw new BlockingQueueException(queue.getTopicName());
 			}
 		}
 		return message;
@@ -115,10 +128,6 @@ public class MockMessageConsumer implements MessageConsumer {
 			throw new JMSRuntimeException(e);
 		}
 		return result;
-	}
-
-	public ConcurrentLinkedQueue<MockMessage> getMessagesReceived() {
-		return messagesReceived;
 	}
 
 	public boolean isTopic(String topicName) {

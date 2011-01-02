@@ -55,8 +55,7 @@ public class HasReceivedMessageOnQueue extends TypeSafeMatcher<MockSession> {
 		result = (messageConsumer != null)
 				&& (messageReceived == expectedMessageReceived);
 		if (result && (messageProperties != null)) {
-			ConcurrentLinkedQueue<MockMessage> messagesReceived = messageConsumer
-					.getMessagesReceived();
+			ConcurrentLinkedQueue<MockMessage> messagesReceived = messageConsumer.messagesReceived;
 			for (MockMessage message : messagesReceived) {
 				try {
 					result &= (messageProperties.getCorrelationID() != null)

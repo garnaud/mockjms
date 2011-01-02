@@ -5,7 +5,7 @@ import javax.jms.Topic;
 
 public class MockTopic implements Topic {
 
-	private String topicName = null;
+	private final String topicName;
 
 	public MockTopic(String topicName) {
 		super();

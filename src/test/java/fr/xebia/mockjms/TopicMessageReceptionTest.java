@@ -7,15 +7,20 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
 
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TopicMessageReceptionTest {
 
 	private static final String TOPIC_NAME = "aTopic";
 	private static final String CLIENT_ID = "aClientId";
+	private MockSession session;
+
+	@Before
+	public void setUp() {
+		session = new MockSession();
+	}
 
 	private void receiveMessageOnTopic(Session session) throws JMSException {
 		receiveMessageOnTopic(session, 1);
@@ -32,9 +37,7 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_1_message_in_topic() throws JMSException {
-		MockSession session = new MockSession();
-
-		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
+		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session);
@@ -44,11 +47,9 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_2_messages_in_topic() throws JMSException {
-		MockSession session = new MockSession();
-
-		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
+		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
-		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
+		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session, 2);
@@ -58,11 +59,19 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_1_message_in_2_consumers() throws JMSException {
-		MockSession session = new MockSession();
-		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
+		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage(), 2);
 		new TopicMessageReceptionTest().receiveMessageOn2Consumers(session);
 		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 2));
+	}
+
+	@Test
+	public void one_of_two_consumers_should_not_receive_message()
+			throws JMSException {
+		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+				new MessageBuilder().buildTextMessage(), 1);
+		new TopicMessageReceptionTest().receiveMessageOn2Consumers(session);
+		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 1));
 	}
 
 	private void receiveMessageOn2Consumers(MockSession session)
@@ -84,23 +93,4 @@ public class TopicMessageReceptionTest {
 		// TODO_TEST see QueueMessageReceptionTest
 	}
 
-	@Test
-	@Ignore
-	public void should_receiving_message_in_durable_subscriber()
-			throws JMSException {
-		MockSession session = new MockSession();
-		session.storeMessagesOnTopicNotDurable(TOPIC_NAME,
-				new MessageBuilder().buildTextMessage());
-
-		new TopicMessageReceptionTest()
-				.receiveMessageOnTopicInDurableSubscriber(session);
-		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME));
-	}
-
-	private void receiveMessageOnTopicInDurableSubscriber(Session session)
-			throws JMSException {
-		TopicSubscriber durableSubscriber = session.createDurableSubscriber(
-				new MockTopic(TOPIC_NAME), CLIENT_ID);
-		durableSubscriber.receive();
-	}
 }

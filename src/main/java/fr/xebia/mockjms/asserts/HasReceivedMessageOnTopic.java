@@ -74,9 +74,7 @@ public class HasReceivedMessageOnTopic extends TypeSafeMatcher<MockSession> {
 		ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
 		for (MockMessageConsumer messageConsumer : session
 				.getTopicConsumers(topicName)) {
-			if (messageConsumer.getMessagesReceived() != null) {
-				messagesReceived.addAll(messageConsumer.getMessagesReceived());
-			}
+			messagesReceived.addAll(messageConsumer.messagesReceived);
 		}
 		return messagesReceived;
 	}

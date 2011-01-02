@@ -26,9 +26,9 @@ public class MockMessage implements Message {
 
 	private String correlationID;
 
-	protected boolean keptForNotDurableTopic;
+	public boolean keptForNotDurableSubscriber;
 
-	protected AtomicInteger numberOfConsumers = new AtomicInteger(0);
+	public AtomicInteger numberOfConsumers = new AtomicInteger(0);
 
 	@Override
 	public String getJMSMessageID() throws JMSException {
@@ -314,13 +314,4 @@ public class MockMessage implements Message {
 		this.delayedTime = delayedTime;
 	}
 
-	public void keepItForNotDurableTopic() {
-		keptForNotDurableTopic = true;
-		numberOfConsumers = new AtomicInteger(0);
-	}
-
-	public void keepItForNotDurableTopic(int numberOfConsumers) {
-		keptForNotDurableTopic = true;
-		this.numberOfConsumers = new AtomicInteger(numberOfConsumers);
-	}
 }

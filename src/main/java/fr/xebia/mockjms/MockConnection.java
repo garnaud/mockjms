@@ -12,11 +12,10 @@ import javax.jms.JMSException;
 import javax.jms.ServerSessionPool;
 import javax.jms.Session;
 import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
 
 public class MockConnection implements Connection {
 
-	private final Set<MockTopicSubscriber> topicSubscribers = new HashSet<MockTopicSubscriber>();
+	private final Set<MockTopicDurableSubscriber> topicSubscribers = new HashSet<MockTopicDurableSubscriber>();
 
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode)
@@ -90,15 +89,7 @@ public class MockConnection implements Connection {
 		return null;
 	}
 
-	public TopicSubscriber addDurableConnection(MockSession session,
-			MockTopic topic, String clientID) {
-		MockTopicSubscriber topicSubscriber = new MockTopicSubscriber(session,
-				topic, clientID);
-		topicSubscribers.add(topicSubscriber);
-		return topicSubscriber;
-	}
-
-	public Set<MockTopicSubscriber> getTopicSubscribers() {
+	public Set<MockTopicDurableSubscriber> getTopicSubscribers() {
 		return topicSubscribers;
 	}
 }

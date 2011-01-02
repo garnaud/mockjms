@@ -3,6 +3,7 @@ package fr.xebia.mockjms;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -182,8 +183,9 @@ public class MockSession implements Session {
 	@Override
 	public TopicSubscriber createDurableSubscriber(Topic topic, String clientID)
 			throws JMSException {
-		TopicSubscriber topicSubscriber = connection.addDurableConnection(
-				new MockSession(), (MockTopic) topic, clientID);
+		MockTopicDurableSubscriber topicSubscriber = new MockTopicDurableSubscriber(
+				this, topic, clientID);
+		messageConsumers.add(topicSubscriber);
 		return topicSubscriber;
 	}
 
@@ -275,40 +277,83 @@ public class MockSession implements Session {
 
 	private final ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>> storeTopicMessages = new ConcurrentHashMap<String, ConcurrentLinkedQueue<MockMessage>>();
 
-	public void storeMessagesOnTopicNotDurable(String topicName,
+	public void storeMessageOnTopic(String topicName, MockTextMessage message,
+			int countOfSubscribers) {
+		if (!storeTopicMessages.containsKey(topicName)) {
+			storeTopicMessages.put(topicName,
+					new ConcurrentLinkedQueue<MockMessage>());
+		}
+		message.numberOfConsumers = new AtomicInteger(countOfSubscribers);
+		if (!storeTopicMessages.get(topicName).add(message)) {
+			throw new RuntimeException("Can't store message on " + topicName
+					+ " (message=" + message + ")");
+		}
+	}
+
+	public void storeMessagesOnTopic(String topicName, MockTextMessage message) {
+		storeMessageOnTopic(topicName, message, 1);
+	}
+
+	/**
+	 * Store a message for a topic not durable. It means that the not durable
+	 * subscriber will receive the message anyway on contrary of the JMS
+	 * specification. That prevents from doing two threads, first one for
+	 * waiting for the message and the second, after the subscriber is ready,
+	 * for sending the message. So the behavior is totally synchronous and
+	 * easier to test. Only one subscriber is authorized for this topic.
+	 * 
+	 * @see #storeMessageOnTopicNotDurable(String, MockMessage, int)
+	 * 
+	 * @param topicName
+	 * @param message
+	 */
+	public void storeMessageOnTopicNotDurable(String topicName,
 			MockMessage message) {
+		storeMessageOnTopicNotDurable(topicName, message, 1);
+	}
+
+	/**
+	 * Store a message for a topic not durable. It means that the not durable
+	 * subscriber will receive the message anyway on contrary of the JMS
+	 * specification. That prevents from doing two threads, first one for
+	 * waiting for the message and the second, after the subscriber is ready,
+	 * for sending the message. So the behavior is totally synchronous and
+	 * easier to test.
+	 * 
+	 * @see #storeMessageOnTopicNotDurable(String, MockMessage)
+	 * @param topicName
+	 * @param message
+	 * @param countOfSubscribers
+	 *            the number of subscribers which will receive the message. Once
+	 *            all subscribers have receive the message, the message will be
+	 *            discarded.
+	 */
+	public void storeMessageOnTopicNotDurable(String topicName,
+			MockMessage message, int countOfSubscribers) {
 		if (!storeTopicMessages.containsKey(topicName)) {
 			storeTopicMessages.put(topicName,
 					new ConcurrentLinkedQueue<MockMessage>());
 		}
-		message.keepItForNotDurableTopic();
+		message.keptForNotDurableSubscriber = true;
+		message.numberOfConsumers = new AtomicInteger(countOfSubscribers);
 		if (!storeTopicMessages.get(topicName).add(message)) {
-			throw new RuntimeException();
+			throw new RuntimeException("Can't store message on " + topicName
+					+ " (message=" + message + ")");
 		}
 	}
 
-	public void storeMessagesOnTopicNotDurable(String topicName,
-			MockMessage message, int numberOfTopic) {
-		if (!storeTopicMessages.containsKey(topicName)) {
-			storeTopicMessages.put(topicName,
-					new ConcurrentLinkedQueue<MockMessage>());
-		}
-		message.keepItForNotDurableTopic(numberOfTopic);
-		if (!storeTopicMessages.get(topicName).add(message)) {
-			throw new RuntimeException();
-		}
-	}
-
-	public MockMessage popTopicStoreMessage(Topic topic) {
+	public MockMessage popTopicStoreMessage(Topic topic,
+			boolean isFromDurableConsumer) {
 		MockMessage mockMessage = null;
 		try {
 			if (storeTopicMessages.containsKey(topic.getTopicName())) {
 				// Remove the message from the topic.
 				for (MockMessage message : storeTopicMessages.get(topic
 						.getTopicName())) {
-					if (message.keptForNotDurableTopic) {
+					if (message.keptForNotDurableSubscriber
+							|| isFromDurableConsumer) {
 						// The message is available for all subscribers, even if
-						// it subscribes after the message would be sent
+						// it subscribes after the message would be sent.
 						mockMessage = message;
 						message.numberOfConsumers.decrementAndGet();
 						if (message.numberOfConsumers.intValue() == 0) {
