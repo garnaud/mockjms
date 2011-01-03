@@ -36,7 +36,7 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_1_message_in_topic() throws JMSException {
-		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+		MockBroker.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session);
@@ -46,9 +46,9 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_2_messages_in_topic() throws JMSException {
-		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+		MockBroker.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
-		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+		MockBroker.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicMessageReceptionTest().receiveMessageOnTopic(session, 2);
@@ -58,7 +58,7 @@ public class TopicMessageReceptionTest {
 
 	@Test
 	public void should_receive_1_message_in_2_consumers() throws JMSException {
-		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+		MockBroker.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage(), 2);
 		new TopicMessageReceptionTest().receiveMessageOn2Consumers(session);
 		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 2));
@@ -67,7 +67,7 @@ public class TopicMessageReceptionTest {
 	@Test
 	public void one_of_two_consumers_should_not_receive_message()
 			throws JMSException {
-		session.storeMessageOnTopicNotDurable(TOPIC_NAME,
+		MockBroker.storeMessageOnTopicNotDurable(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage(), 1);
 		new TopicMessageReceptionTest().receiveMessageOn2Consumers(session);
 		assertThat(session, hasReceivedMessageOnTopic(TOPIC_NAME, 1));

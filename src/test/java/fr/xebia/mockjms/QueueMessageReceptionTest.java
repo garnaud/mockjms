@@ -4,6 +4,7 @@ import static fr.xebia.mockjms.asserts.HasReceivedMessageOnQueue.hasReceivedMess
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
@@ -46,7 +47,7 @@ public class QueueMessageReceptionTest {
 	public void should_receive_message_on_queue() throws JMSException {
 		MockSession session = new MockSession();
 		MockTextMessage message = new MessageBuilder().buildTextMessage();
-		session.storeMessagesOnQueue(QUEUE_NAME, message);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
 		new QueueMessageReceptionTest().receiveMessage(session);
@@ -66,7 +67,7 @@ public class QueueMessageReceptionTest {
 	public void should_receive_message_on_queue_before_5s() throws JMSException {
 		MockSession session = new MockSession();
 		MockTextMessage message = new MessageBuilder().buildTextMessage();
-		session.storeMessagesOnQueue(QUEUE_NAME, message);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
 		new QueueMessageReceptionTest().receiveMessageBefore5s(session);
@@ -81,7 +82,7 @@ public class QueueMessageReceptionTest {
 		// Simulate delayed time of 6 seconds
 		MockTextMessage message = new MessageBuilder().setDelayedTimeInMs(6000)
 				.buildTextMessage();
-		session.storeMessagesOnQueue(QUEUE_NAME, message);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
 		new QueueMessageReceptionTest().receiveMessageBefore5s(session);
@@ -92,7 +93,7 @@ public class QueueMessageReceptionTest {
 			throws JMSException {
 		MockSession session = new MockSession();
 		MockTextMessage message = new MessageBuilder().buildTextMessage();
-		session.storeMessagesOnQueue(QUEUE_NAME, message);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		// The method to test
 		new QueueMessageReceptionTest().receiveMessageNoWait(session);
@@ -116,8 +117,8 @@ public class QueueMessageReceptionTest {
 
 		MockTextMessage message1 = new MessageBuilder().buildTextMessage();
 		MockTextMessage message2 = new MessageBuilder().buildTextMessage();
-		session.storeMessagesOnQueue(QUEUE_NAME, message1);
-		session.storeMessagesOnQueue(QUEUE_NAME, message2);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message1);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message2);
 
 		new QueueMessageReceptionTest().receiveMessageOnLoop(session, 2);
 
@@ -132,5 +133,21 @@ public class QueueMessageReceptionTest {
 	@Test
 	public void should_receive_two_messages_without_waiting() {
 		// TODO_TEST
+	}
+
+	@Test
+	public void should_receive_message_without_session_predefined()
+			throws JMSException {
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, new MockTextMessage());
+		getSessionAndReceiveMessage();
+	}
+
+	private void getSessionAndReceiveMessage() throws JMSException {
+		ConnectionFactory connectionFactory = new MockConnectionFactory();
+		Session session = connectionFactory.createConnection().createSession(
+				false, Session.AUTO_ACKNOWLEDGE);
+		MessageConsumer consumer = session.createConsumer(new MockQueue(
+				QUEUE_NAME));
+		consumer.receive();
 	}
 }

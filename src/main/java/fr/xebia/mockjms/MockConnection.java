@@ -1,8 +1,5 @@
 package fr.xebia.mockjms;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -15,13 +12,10 @@ import javax.jms.Topic;
 
 public class MockConnection implements Connection {
 
-	private final Set<MockTopicDurableSubscriber> topicSubscribers = new HashSet<MockTopicDurableSubscriber>();
-
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode)
 			throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+		return new MockSession();
 	}
 
 	@Override
@@ -89,7 +83,4 @@ public class MockConnection implements Connection {
 		return null;
 	}
 
-	public Set<MockTopicDurableSubscriber> getTopicSubscribers() {
-		return topicSubscribers;
-	}
 }

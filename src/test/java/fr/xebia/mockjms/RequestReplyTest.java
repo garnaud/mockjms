@@ -34,7 +34,7 @@ public class RequestReplyTest {
 		MockTextMessage message = new MessageBuilder().setReplyTo(replyQueue)
 				.setCorrelationID(correlationID).buildTextMessage();
 
-		session.storeMessagesOnQueue(QUEUE_NAME, message);
+		MockBroker.storeMessagesOnQueue(QUEUE_NAME, message);
 
 		new RequestReplyTest().replyRequest(session, message);
 

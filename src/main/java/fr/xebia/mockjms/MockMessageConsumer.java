@@ -15,13 +15,11 @@ import fr.xebia.mockjms.exceptions.JMSRuntimeException;
 
 public class MockMessageConsumer implements MessageConsumer {
 
-	private final MockSession session;
 	private final Destination destination;
 	public final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
 
-	public MockMessageConsumer(MockSession session, Destination destination) {
+	public MockMessageConsumer(Destination destination) {
 		super();
-		this.session = session;
 		this.destination = destination;
 	}
 
@@ -59,14 +57,14 @@ public class MockMessageConsumer implements MessageConsumer {
 		MockMessage message = null;
 		if (isQueueConsumer()) {
 			Queue queue = (Queue) destination;
-			message = session.popQueueStoreMessage(queue);
+			message = MockBroker.popQueueStoreMessage(queue);
 			if (message != null) {
 				messagesReceived.add(message);
 			} else {
 				throw new BlockingQueueException(queue.getQueueName());
 			}
 		} else {
-			message = session.popTopicStoreMessage((Topic) destination,
+			message = MockBroker.popTopicStoreMessage((Topic) destination,
 					isDurableTopicConsumer());
 			if (message != null) {
 				messagesReceived.add(message);
@@ -79,7 +77,7 @@ public class MockMessageConsumer implements MessageConsumer {
 	public Message receive(long timeout) throws JMSException {
 		MockMessage message = null;
 		if (destination instanceof Queue) {
-			message = session.popQueueStoreMessage((Queue) destination);
+			message = MockBroker.popQueueStoreMessage((Queue) destination);
 			if ((message != null) && (timeout > message.getDelayedTime())) {
 				messagesReceived.add(message);
 			} else {
@@ -96,7 +94,7 @@ public class MockMessageConsumer implements MessageConsumer {
 		MockMessage message = null;
 		if (destination instanceof Queue) {
 			Queue queue = (Queue) destination;
-			message = session.popQueueStoreMessage(queue);
+			message = MockBroker.popQueueStoreMessage(queue);
 			if (message != null) {
 				messagesReceived.add(message);
 			}

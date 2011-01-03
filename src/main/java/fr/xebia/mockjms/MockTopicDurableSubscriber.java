@@ -12,7 +12,7 @@ public class MockTopicDurableSubscriber extends MockMessageConsumer implements
 
 	public MockTopicDurableSubscriber(MockSession session, Topic topic,
 			String clientID) {
-		super(session, topic);
+		super(topic);
 		this.clientID = clientID;
 		this.topic = topic;
 	}

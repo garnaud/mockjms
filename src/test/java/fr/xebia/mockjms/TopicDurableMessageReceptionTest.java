@@ -25,7 +25,7 @@ public class TopicDurableMessageReceptionTest {
 	public void should_receive_message_in_durable_subscriber()
 			throws JMSException {
 
-		session.storeMessagesOnTopic(TOPIC_NAME,
+		MockBroker.storeMessagesOnTopic(TOPIC_NAME,
 				new MessageBuilder().buildTextMessage());
 
 		new TopicDurableMessageReceptionTest()

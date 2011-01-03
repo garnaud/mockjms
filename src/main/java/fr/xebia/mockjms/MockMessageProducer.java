@@ -13,12 +13,10 @@ import fr.xebia.mockjms.exceptions.JMSRuntimeException;
 
 public class MockMessageProducer implements MessageProducer {
 
-	private final MockSession mockSession;
 	private final Destination destination;
 	private final ConcurrentLinkedQueue<MockMessage> messagesToSend = new ConcurrentLinkedQueue<MockMessage>();
 
-	public MockMessageProducer(MockSession mockSession, Destination destination) {
-		this.mockSession = mockSession;
+	public MockMessageProducer(Destination destination) {
 		this.destination = destination;
 	}
 
@@ -98,7 +96,7 @@ public class MockMessageProducer implements MessageProducer {
 	public void send(Message message) throws JMSException {
 		if (destination instanceof MockQueue) {
 			// Store the message in session to be ready to be received
-			mockSession.storeMessagesOnQueue(
+			MockBroker.storeMessagesOnQueue(
 					((MockQueue) destination).getQueueName(),
 					(MockMessage) message);
 			// Store messages sent
