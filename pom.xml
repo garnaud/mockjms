@@ -87,6 +87,10 @@
 										<matchString>TODO_TEST</matchString>
 										<matchType>ignoreCase</matchType>
 									</tag>
+									<tag>
+										<matchString>REFACTOR</matchString>
+										<matchType>ignoreCase</matchType>
+									</tag>
 								</tags>
 							</tagClass>
 						</tagClasses>
