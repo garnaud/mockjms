@@ -2,7 +2,6 @@ package fr.xebia.mockjms;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -11,14 +10,13 @@ import javax.jms.Queue;
 import javax.jms.Topic;
 
 import fr.xebia.mockjms.exceptions.BlockingQueueException;
-import fr.xebia.mockjms.exceptions.JMSRuntimeException;
 
 public class MockMessageConsumer implements MessageConsumer {
 
-	private final Destination destination;
+	private final MockDestination destination;
 	public final ConcurrentLinkedQueue<MockMessage> messagesReceived = new ConcurrentLinkedQueue<MockMessage>();
 
-	public MockMessageConsumer(Destination destination) {
+	public MockMessageConsumer(MockDestination destination) {
 		super();
 		this.destination = destination;
 	}
@@ -113,25 +111,18 @@ public class MockMessageConsumer implements MessageConsumer {
 	}
 
 	public boolean isQueue(String queueName) {
-		boolean result = false;
-		try {
-			result = (destination instanceof Queue)
-					&& queueName.equals(((Queue) destination).getQueueName());
-		} catch (JMSException e) {
-			throw new JMSRuntimeException(e);
-		}
-		return result;
+		return destination.isQueue() && queueName.equals(destination.getName());
 	}
 
 	public boolean isTopic(String topicName) {
-		boolean result = false;
-		try {
-			result = (destination instanceof Topic)
-					&& topicName.equals(((Topic) destination).getTopicName());
-		} catch (JMSException e) {
-			throw new JMSRuntimeException(e);
-		}
-		return result;
+		return destination.isTopic() && topicName.equals(destination.getName());
 	}
 
+	public boolean isQueue() {
+		return destination.isQueue();
+	}
+
+	public boolean isTopic() {
+		return destination.isTopic();
+	}
 }

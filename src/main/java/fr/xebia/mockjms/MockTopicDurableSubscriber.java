@@ -8,9 +8,9 @@ public class MockTopicDurableSubscriber extends MockMessageConsumer implements
 		TopicSubscriber {
 
 	private final String clientID;
-	private final Topic topic;
+	private final MockTopic topic;
 
-	public MockTopicDurableSubscriber(MockSession session, Topic topic,
+	public MockTopicDurableSubscriber(MockSession session, MockTopic topic,
 			String clientID) {
 		super(topic);
 		this.clientID = clientID;

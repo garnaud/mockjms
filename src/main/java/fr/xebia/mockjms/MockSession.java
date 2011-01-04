@@ -1,6 +1,7 @@
 package fr.xebia.mockjms;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.BytesMessage;
@@ -21,6 +22,11 @@ import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import fr.xebia.mockjms.exceptions.CreateSameDestinationException;
 
 public class MockSession implements Session {
 
@@ -139,14 +145,20 @@ public class MockSession implements Session {
 		return messageProducer;
 	}
 
-	ConcurrentLinkedQueue<MockMessageConsumer> messageConsumers = new ConcurrentLinkedQueue<MockMessageConsumer>();
+	Multimap<String, MockMessageConsumer> messageConsumers = HashMultimap
+			.create();
 
 	@Override
 	public MessageConsumer createConsumer(Destination destination)
 			throws JMSException {
 		MockMessageConsumer mockMessageConsumer = new MockMessageConsumer(
-				destination);
-		messageConsumers.add(mockMessageConsumer);
+				(MockDestination) destination);
+		MockDestination mockDestination = (MockDestination) destination;
+		if (mockDestination.isQueue()
+				&& messageConsumers.containsKey(mockDestination.getName())) {
+			throw new CreateSameDestinationException(mockDestination);
+		}
+		messageConsumers.put(mockDestination.getName(), mockMessageConsumer);
 		return mockMessageConsumer;
 	}
 
@@ -178,8 +190,10 @@ public class MockSession implements Session {
 	public TopicSubscriber createDurableSubscriber(Topic topic, String clientID)
 			throws JMSException {
 		MockTopicDurableSubscriber topicSubscriber = new MockTopicDurableSubscriber(
-				this, topic, clientID);
-		messageConsumers.add(topicSubscriber);
+				this, (MockTopic) topic, clientID);
+		messageConsumers.put(
+				((MockDestination) topicSubscriber.getTopic()).getName(),
+				topicSubscriber);
 		return topicSubscriber;
 	}
 
@@ -222,14 +236,17 @@ public class MockSession implements Session {
 	}
 
 	public MockMessageConsumer getQueueConsumer(String queueName) {
-		MockMessageConsumer result = null;
-		for (MockMessageConsumer messageConsumer : messageConsumers) {
-			if (messageConsumer.isQueue(queueName)) {
-				result = messageConsumer;
-				break;
+		MockMessageConsumer messageConsumer = null;
+		Collection<MockMessageConsumer> queueConsumers = messageConsumers
+				.get(queueName);
+		if ((queueConsumers.size() == 1)) {
+			MockMessageConsumer queueConsumer = queueConsumers.iterator()
+					.next();
+			if (queueConsumer.isQueue()) {
+				messageConsumer = queueConsumer;
 			}
 		}
-		return result;
+		return messageConsumer;
 	}
 
 	public MockMessageProducer getQueueProducer(String queueName) {
@@ -243,41 +260,18 @@ public class MockSession implements Session {
 		return mockMessageProducer;
 	}
 
-	public MockMessageProducer getTopicProducer(String topicName) {
-		MockMessageProducer mockMessageProducer = null;
-		for (MockMessageProducer messageProducer : messageProducers) {
-			if (messageProducer.isTopic(topicName)) {
-				mockMessageProducer = messageProducer;
-				break;
-			}
-		}
-		return mockMessageProducer;
-	}
-
 	public MockMessageConsumer getTopicConsumer(String topicName) {
 		MockMessageConsumer result = null;
-		for (MockMessageConsumer messageConsumer : messageConsumers) {
-			if (messageConsumer.isTopic(topicName)) {
+		for (MockMessageConsumer messageConsumer : messageConsumers
+				.get(topicName)) {
+			if (messageConsumer.isTopic()) {
 				result = messageConsumer;
-				break;
 			}
-		}
-		if (result != null) {
-			return result;
 		}
 		return result;
 	}
 
-	public ConcurrentLinkedQueue<MockMessageConsumer> getTopicConsumers(
-			String topicName) {
-		ConcurrentLinkedQueue<MockMessageConsumer> messageConsumersForTopic = new ConcurrentLinkedQueue<MockMessageConsumer>();
-		for (MockMessageConsumer mockMessageConsumer : messageConsumers) {
-			if (mockMessageConsumer.isTopic(topicName)) {
-				messageConsumersForTopic.add(mockMessageConsumer);
-			}
-
-		}
-		return messageConsumers;
+	public Collection<MockMessageConsumer> getTopicConsumers(String topicName) {
+		return messageConsumers.get(topicName);
 	}
-
 }
